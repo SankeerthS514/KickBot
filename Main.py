@@ -6,6 +6,7 @@ import random
 import urlopen
 import threading
 import asyncio
+from replit import db
 from bs4 import BeautifulSoup
 
 from asyncio import sleep as s 
@@ -16,10 +17,8 @@ mlist=[]
 
 client = commands.Bot(command_prefix = '!')
 
-def get_time():
-  response = requests.get("http://worldtimeapi.org/api/timezone/Asia/Kolkata")
-  time = (response.json()["datetime"])[11:16]
-  return(time)
+commands={}
+
 
 def embedIt(toEmbed,ratings,title):
   embed = discord.Embed(
@@ -53,31 +52,44 @@ async def on_ready():
 @client.event
 async def on_message(message):
 
+  #Numbers = [1,2,3,4,5]
+
   if message.author == client.user:
     return
 
-
-  if 'Hello' in message.content.lower():
-    await message.channel.send("Hi")
-
   await client.process_commands(message)
 
+
+
+
 @client.command()
-async def getout(ctx,member : discord.Member,*,reason=None):
+async def bye(ctx,member : discord.Member,*,reason=None):
   if str(ctx.message.author) == 'Sank514#6682' or str(ctx.message.author) == 'MaleuS#3296':
-    await ctx.send('Goodbye',tts=True)
+    await ctx.send('You were removed from the voice channel',tts=True)
     await member.edit(voice_channel=None)
+
+@client.command()
+async def shh(ctx,member : discord.Member,*,reason=None):
+  if str(ctx.message.author) == 'Sank514#6682' or str(ctx.message.author) == 'MaleuS#3296':
+    await ctx.send("You have the right to remain silent",tts=True) 
+    await member.edit(mute = True)
+
+@client.command()
+async def unshh(ctx,member : discord.Member,*,reason=None):
+  if str(ctx.message.author) == 'Sank514#6682' or str(ctx.message.author) == 'MaleuS#3296':
+    await ctx.send("Your speaking priveleges are restored, Filthy Wench",tts=True) 
+    await member.edit(mute = False)
 
 @client.command()
 async def move(ctx,member : discord.Member,*,reason=None):
   if str(ctx.message.author) == 'Sank514#6682' or str(ctx.message.author) == 'MaleuS#3296':
-    await ctx.send('Join Here',tts=True)
+    await ctx.send('You have been summoned',tts=True)
     await member.edit(voice_channel=ctx.author.voice.channel)
 
 @client.command()
 async def sus(ctx,member : discord.Member,*,reason=None):
   if member.id!=617732810115121163:
-    await ctx.send('Move to the other VC')
+    await ctx.send('Please leave')
     for i in ctx.message.guild.channels:
       if i.id==859454337130168362:
         channel=i
@@ -85,37 +97,29 @@ async def sus(ctx,member : discord.Member,*,reason=None):
     await member.edit(voice_channel=channel)
 
 
-@client.command()
-async def Mute(ctx,member : discord.Member,*,reason=None):
-  if str(ctx.message.author) == 'Sank514#6682' or str(ctx.message.author) == 'MaleuS#3296':
-    await ctx.send("Please Be Silent",tts=True) 
-    await member.edit(mute = True)
 
 
-@client.command()
-async def unMute(ctx,member : discord.Member,*,reason=None):
-  if str(ctx.message.author) == 'Sank514#6682' or str(ctx.message.author) == 'MaleuS#3296':
-    await ctx.send("You may now Speak",tts=True) 
-    await member.edit(mute = False)
 
 @client.command(pass_context=True)
-async def movierem(ctx,time: int,*,message):
-  await ctx.send("Ok i will remind you in "+str(time)+" minutes, Goodbye")
-  await s(60*time)
-  await ctx.send("@everyone let's watch "+f'{message}'+" tonight",tts=True)
+async def Ccommand(ctx,*,message):
+  parts=message.split(",")
+  db[parts[0].lower()]=parts[1]
 
-@client.command()
-async def remind(ctx,*,message):
-  
-  t2=message.split(' ')[0].split(':')
-  while True:
-    await s(5)
-    t=str(get_time()).split(':')
-    if(int(t[0])>12):
-      t[0]=str(int(t[0])-12)
-    if t[0]==t2[0] and t[1]==t2[1]:
-      await ctx.send("Hello there, here's the reminder you asked for: "+message,tts=True)
-      break
+@client.command(pass_context=True)
+async def Rcommand(ctx,*,message):
+  if str(ctx.message.author) == 'Sank514#6682':
+    del db[message.lower()]
+
+@client.command(pass_context=True)
+async def Lcommand(ctx):
+  if str(ctx.message.author) == 'Sank514#6682':
+    for i in db.keys():
+      await ctx.send(i+" : "+db[i])
+
+
+
+
+
 
 @client.command(pass_context = True)
 async def spam(ctx, member : discord.Member, *, content: str):
@@ -127,7 +131,8 @@ async def spam(ctx, member : discord.Member, *, content: str):
 async def valorant(ctx):
   channel=ctx.message.guild.id
   if(channel==678223464699789312):
-    await ctx.send('<@!455705329443930113><@!456649200155754506><@!690148550558220294><@!442598851656941592><@!617732810115121163><@!442639977764093954><@!792641729320714251><@!518047377064591399><@!605423783590887427><@!715544344819662901><@!582964437284290580>'+"We playin valorant?")
+    await ctx.send('<@!455705329443930113><@!456649200155754506><@!690148550558220294><@!442598851656941592><@!617732810115121163><@!442639977764093954><@!792641729320714251><@!518047377064591399><@!605423783590887427><@!715544344819662901><@!582964437284290580><@!840512781744996352>'+"We playin valorant?")
+
 
 
 @client.command(pass_context = True)
@@ -153,8 +158,8 @@ async def imdb(ctx,*,content: str):
       ratings.append(rating.text)
     else:
       ratings.append('None')
-  sent=await ctx.send(embed=embedIt(movies,ratings,"Your Search Results uWu"))
-  sent2=await ctx.send("Which movie would you like to check out, You have 10 seconds to respond!")
+  sent=await ctx.send(embed=embedIt(movies,ratings,"Your Search Results"))
+  sent2=await ctx.send("Which movie would you like to check out, You have 10 seconds to respond")
   try:
     choice = await ctx.bot.wait_for("message",timeout=10,check=lambda message: message.author==ctx.author and message.channel==ctx.channel)
     if choice:
@@ -168,29 +173,29 @@ async def imdb(ctx,*,content: str):
         r=rating.text
       else:
         r='None'
-      A=soup.find('div',class_="Storyline__StorylineWrapper-sc-1b58ttw-0 iywpty")
-      B=A.find_all('ul')
-      C=B[1].find_all('li')
-      D=C[2].find('div',class_="ipc-metadata-list-item__content-container")
-      E=D.find_all('a')     
-      sent=await ctx.send("Would you like the details for this movie? You have 5 seconds to reply")
+      A=soup.find('li',{"data-testid":"storyline-genres"})
+      print(A)
+      print("\n")
+
+      B=A.find_all('li',class_="ipc-inline-list__item")     
+      sent=await ctx.send("Want the details? You have 15 seconds to reply type 'Y/y' or 'N/n'")
       try:
-        choice = await ctx.bot.wait_for("message",timeout=5,check=lambda message: message.author==ctx.author and message.channel==ctx.channel)
+        choice = await ctx.bot.wait_for("message",timeout=15,check=lambda message: message.author==ctx.author and message.channel==ctx.channel)
         if 'y' in choice.content or 'Y' in choice.content:
-          await ctx.send("Here are the details you asked for:")
+          await ctx.send("Here are the Details: ")
           await ctx.send(f'The IMDb Rating is: {r}')
-          await ctx.send(embed=embedIt2(E,"The Genres of this movie:"))
+          await ctx.send(embed=embedIt2(B,"The Genres of this movie:"))
         else:
-          await ctx.send("Sorry you took too long")
+          await ctx.send("Bro what was the point then")
 
       except asyncio.TimeoutError:
         await sent.delete()
-        await ctx.send("Sorry you took too long>.<",delete_after=10)
+        await ctx.send("You took too long!",delete_after=10)
 
   except asyncio.TimeoutError:
     await sent.delete()
     await sent2.delete()
-    await ctx.send("Sorry you took too long>.<",delete_after=10)
+    await ctx.send("You took too long!",delete_after=10)
   
 
 
@@ -199,18 +204,11 @@ async def addmovie(ctx,*,content: str):
   file = open('Votes.txt','a')
   file.write(content.strip()+'\n')
   file.close()
+  m=await ctx.send("Alright, Added")
+  await s(5)
+  await m.delete()
 
-@client.command(pass_context = True)
-async def Laugh(ctx):
-  if str(ctx.message.author) == 'Sank514#6682' or str(ctx.message.author) == 'MaleuS#3296':
-    channel = ctx.author.voice.channel #gets channel
-    await channel.connect() #connects to channel
-    guild = ctx.guild
-    voice_client: discord.VoiceClient = discord.utils.get(client.voice_clients, guild=guild)
-    audio_source = discord.FFmpegPCMAudio('Laugh.mp3')
-    voice_client.play(audio_source, after=None)
-    await asyncio.sleep(4)
-    await ctx.voice_client.disconnect()
+
 
 @client.command(pass_context = True)
 async def delmovie(ctx,*,content: str):
@@ -222,7 +220,27 @@ async def delmovie(ctx,*,content: str):
       if content.lower() not in line.strip("\n").lower():
           f2.write(line)
   f2.close()
-  await ctx.send("Deleted")
+  m=await ctx.send("Deleted")
+  await s(5)
+  await m.delete()
+
+@client.command(pass_context = True)
+async def movielist(ctx):
+  file = open('Votes.txt','r')
+  embed = discord.Embed(
+    colour=discord.Colour.teal()
+  )
+  count=1
+  embed.set_author(name="The Movie List: ")
+  embed.set_thumbnail(url=ctx.message.author.avatar_url)
+  movies=[]
+  for each in file:
+    embed.add_field(name=str(count).strip()+')',value=each,inline=False)
+    movies.append(each)
+    count=count+1
+  message=await ctx.send(embed=embed)
+  await s(5*60)
+  await message.delete()
 
 
 @client.command(pass_context = True)
@@ -257,6 +275,7 @@ async def votelist(ctx):
       winner=i.emoji
   await message.delete()  
   await ctx.send(f'{movies[res.index(winner)].strip()} !!!')
+  
 
 keep_alive()
 client.run(os.getenv('TOKEN'))
