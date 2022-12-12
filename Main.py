@@ -1,10 +1,6 @@
 import os
 import discord
 import requests
-import json
-import random
-import urlopen
-import threading
 import asyncio
 from replit import db
 from bs4 import BeautifulSoup
@@ -57,6 +53,22 @@ async def on_message(message):
   if message.author == client.user:
     return
 
+  if any(word in message.content.lower() for word in db.keys()):
+    for i in message.content.lower().split():
+      if i in db.keys():
+        await message.channel.send(db[i])
+
+  if message.content.startswith('-'):
+    customs = open("Customs.txt","r")
+    check = message.content[1:].strip(" ")
+    for i in customs.readlines():
+      if check in i:
+        invites = open(check+".txt","r")
+        await message.channel.send(invites.readline())
+        break
+
+  
+        
   await client.process_commands(message)
 
 
@@ -65,25 +77,37 @@ async def on_message(message):
 @client.command()
 async def bye(ctx,member : discord.Member,*,reason=None):
   if str(ctx.message.author) == 'Sank514#6682' or str(ctx.message.author) == 'MaleuS#3296':
-    await ctx.send('You were removed from the voice channel',tts=True)
+    await ctx.send('You were removed from the voice channel')
     await member.edit(voice_channel=None)
+
+@client.command()
+async def wordle(ctx,*,reason=None):
+  for i in range(6):
+    try:
+      guess = await ctx.bot.wait_for("message",timeout=10,check=lambda message: message.author==ctx.author and message.channel==ctx.channel)
+      m = await ctx.send(guess.content)
+      
+
+    except asyncio.TimeoutError:
+      await m.delete()
+
 
 @client.command()
 async def shh(ctx,member : discord.Member,*,reason=None):
   if str(ctx.message.author) == 'Sank514#6682' or str(ctx.message.author) == 'MaleuS#3296':
-    await ctx.send("You have the right to remain silent",tts=True) 
+    await ctx.send("You have the right to remain silent") 
     await member.edit(mute = True)
 
 @client.command()
 async def unshh(ctx,member : discord.Member,*,reason=None):
   if str(ctx.message.author) == 'Sank514#6682' or str(ctx.message.author) == 'MaleuS#3296':
-    await ctx.send("Your speaking priveleges are restored, Filthy Wench",tts=True) 
+    await ctx.send("Your speaking priveleges are restored, Filthy Wench") 
     await member.edit(mute = False)
 
 @client.command()
 async def move(ctx,member : discord.Member,*,reason=None):
   if str(ctx.message.author) == 'Sank514#6682' or str(ctx.message.author) == 'MaleuS#3296':
-    await ctx.send('You have been summoned',tts=True)
+    await ctx.send('You have been summoned')
     await member.edit(voice_channel=ctx.author.voice.channel)
 
 @client.command()
@@ -117,6 +141,19 @@ async def Lcommand(ctx):
       await ctx.send(i+" : "+db[i])
 
 
+@client.command()
+async def newGroup(ctx,*,content:str):
+  p = content.split(",")
+  await ctx.send("Names : "+p[0]+" Group Name : "+p[1])
+  customs = open("Customs.txt","a")
+  customs.write("\n")
+  customs.write(p[1])
+  customs.close()
+  mentions = open(p[1]+".txt","w")
+  mentions.write(p[0])
+  mentions.close()
+
+  
 
 
 
@@ -127,23 +164,18 @@ async def spam(ctx, member : discord.Member, *, content: str):
     channel = await member.create_dm()
     await channel.send('<@!'+str(member.id)+'>'+content)
 
-@client.command(pass_context = True)
-async def valorant(ctx):
-  channel=ctx.message.guild.id
-  if(channel==678223464699789312):
-    await ctx.send('<@!455705329443930113><@!456649200155754506><@!690148550558220294><@!442598851656941592><@!617732810115121163><@!442639977764093954><@!792641729320714251><@!518047377064591399><@!605423783590887427><@!715544344819662901><@!582964437284290580><@!840512781744996352>'+"We playin valorant?")
+
+
+
+
 
 
 
 @client.command(pass_context = True)
 async def imdb(ctx,*,content: str):
   movie = content.strip().split(' ')
-  mov = ""
-  for word in movie:
-    if(mov==""):
-      mov=word
-    else:
-      mov = mov + "+" + word
+  mov = "+".join(movie)
+  
   website=requests.get('https://www.imdb.com/find?q='+mov+'&ref_=nv_sr_sm').text
   soup = BeautifulSoup(website,'lxml')
   options = soup.find('table',class_="findList")
@@ -174,8 +206,6 @@ async def imdb(ctx,*,content: str):
       else:
         r='None'
       A=soup.find('li',{"data-testid":"storyline-genres"})
-      print(A)
-      print("\n")
 
       B=A.find_all('li',class_="ipc-inline-list__item")     
       sent=await ctx.send("Want the details? You have 15 seconds to reply type 'Y/y' or 'N/n'")
@@ -243,6 +273,7 @@ async def movielist(ctx):
   await message.delete()
 
 
+
 @client.command(pass_context = True)
 async def votelist(ctx):
   file = open('Votes.txt','r')
@@ -279,5 +310,3 @@ async def votelist(ctx):
 
 keep_alive()
 client.run(os.getenv('TOKEN'))
-
-
